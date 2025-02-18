@@ -1,0 +1,82 @@
+import random
+import uuid
+
+class Agent:
+    def __init__(self, gender):
+        self.id = uuid.uuid4()  # Unique identifier for each agent
+        self.gender = gender
+        self.turns_remaining = 20 if gender == 'female' else 60
+        self.cost = -2  # Cost of living per turn
+        self.children = []
+        self.ancestors = []
+        self.is_coupled = False
+        self.turns_without_coupling = 0
+
+    def couple(self, partner):
+        """Couples with another agent and creates a new agent."""
+        if self.is_coupled or partner.is_coupled:
+            return None  # Can't couple if already coupled
+        new_agent = Agent(gender=random.choice(['male', 'female']))
+        new_agent.ancestors = [self, partner]
+        self.children.append(new_agent)
+        partner.children.append(new_agent)
+        self.is_coupled = True
+        partner.is_coupled = True
+        self.cost = -1  # Cost of living reduced after coupling
+        partner.cost = -1
+        return new_agent
+
+    def update_cost(self):
+        """Updates the cost of living based on coupling status and turns remaining."""
+        if self.is_coupled:
+            self.cost = -1  # No cost if coupled
+        elif self.turns_remaining <= 0:
+            self.cost = -4  # Increased cost after turns are up
+        else:
+            self.cost = -2  # Normal cost
+
+    def next_turn(self):
+        """Processes the actions and costs for the next turn."""
+        self.turns_remaining -= 1
+        self.update_cost()
+        if not self.is_coupled:
+            self.turns_without_coupling += 1
+
+class Simulation:
+    def __init__(self):
+        self.agents = self.create_agents()
+        self.generations = 100
+
+    def create_agents(self):
+        """Creates 16 agents: 8 male and 8 female."""
+        agents = [Agent('male') for _ in range(8)] + [Agent('female') for _ in range(8)]
+        random.shuffle(agents)  # Shuffle agents for randomness
+        return agents
+
+    def run(self):
+        """Runs the simulation for a specified number of generations."""
+        for generation in range(self.generations):
+            print(f"Generation: {generation + 1}")
+            for agent in self.agents:
+                if agent.turns_remaining > 0:
+                    # Attempt to couple with a random partner
+                    partner = random.choice(self.agents)
+                    if partner != agent and not partner.is_coupled:
+                        agent.couple(partner)
+
+                # Process the turn for the agent
+                agent.next_turn()
+
+            # Print the status of agents at the end of the generation
+            self.print_agents_status()
+
+    def print_agents_status(self):
+        """Prints the status of each agent."""
+        for agent in self.agents:
+            print(f"Agent ID: {agent.id}, Gender: {agent.gender}, Coupled: {agent.is_coupled}, "
+                  f"Turns Remaining: {agent.turns_remaining}, Cost: {agent.cost}, "
+                  f"Children: {len(agent.children)}, Ancestors: {len(agent.ancestors)}")
+
+if __name__ == "__main__":
+    sim = Simulation()
+    sim.run()
