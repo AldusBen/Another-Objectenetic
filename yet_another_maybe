@@ -1,0 +1,88 @@
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+from collections import namedtuple
+
+# Constants
+GRID_SIZE = 32
+NUM_SPOTS = 10
+NUM_GENERATIONS = 25
+NUM_AGENTS = 8
+MALES = 4
+FEMALES = 4
+
+# Define a named tuple for agents
+Agent = namedtuple('Agent', ['gender', 'spots'])
+
+class AgentEnvironment:
+    def __init__(self):
+        self.agents = self.initialize_agents()
+
+    def initialize_agents(self):
+        """Initialize agents with random spots."""
+        agents = []
+        for _ in range(MALES):
+            agents.append(self.create_agent('male'))
+        for _ in range(FEMALES):
+            agents.append(self.create_agent('female'))
+        return agents
+
+    def create_agent(self, gender):
+        """Create an agent with a random set of spots."""
+        spots = random.sample(range(10), 5)  # Randomly select 5 spots from 0-9
+        return Agent(gender, spots)
+
+    def breed_agents(self, father, mother):
+        """Breed two agents to create a new agent."""
+        child_spots = []
+        # Combine spots from father and mother
+        father_spots = father.spots
+        mother_spots = mother.spots
+
+        # Select 5 random spots from each parent
+        selected_father = random.sample(father_spots, 5)
+        selected_mother = random.sample(mother_spots, 5)
+
+        # Calculate desirability
+        desirability = self.calculate_desirability(selected_father, selected_mother)
+
+        # Create child based on gender
+        child_gender = 'male' if father.gender == 'male' else 'female'
+        return Agent(child_gender, child_spots), desirability
+
+    def calculate_desirability(self, father_spots, mother_spots):
+        """Calculate the desirability of the new agent based on parent spots."""
+        desirability_score = 0
+        for spot in father_spots + mother_spots:
+            desirability_score += (9 - spot)  # Higher is better, closer to 9
+        return desirability_score
+
+    def run_generations(self):
+        """Run the breeding process for a number of generations."""
+        for generation in range(NUM_GENERATIONS):
+            new_agents = []
+            for i in range(0, len(self.agents), 2):
+                father = self.agents[i]
+                mother = self.agents[i + 1]
+                child, desirability = self.breed_agents(father, mother)
+                new_agents.append(child)
+
+            self.agents = new_agents
+
+    def visualize_agents(self):
+        """Visualize the agents' spots."""
+        plt.figure(figsize=(10, 10))
+        for agent in self.agents:
+            plt.scatter(agent.spots, [0] * len(agent.spots), label=agent.gender)
+        plt.title('Agents Spots Visualization')
+        plt.xlabel('Spot Index')
+        plt.ylabel('Agents')
+        plt.yticks([])
+        plt.legend()
+        plt.grid()
+        plt.show()
+
+if __name__ == "__main__":
+    env = AgentEnvironment()
+    env.run_generations()
+    env.visualize_agents()
