@@ -1,0 +1,93 @@
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+from collections import namedtuple
+
+# Constants
+GRID_SIZE = 32
+SPOT_COUNT = 10
+GENERATIONS = 25
+INITIAL_POPULATION = 8
+MALES = 4
+FEMALES = 4
+
+# Define the Agent class
+class Agent:
+    def __init__(self, gender):
+        self.gender = gender  # 'yX' for male, 'xX' for female
+        self.spots = self.generate_spots()
+        self.desirability = self.calculate_desirability()
+
+    def generate_spots(self):
+        """Generate 10 random spots with values from 0 to 9."""
+        return {i: random.randint(0, 9) for i in random.sample(range(SPOT_COUNT), SPOT_COUNT)}
+
+    def calculate_desirability(self):
+        """Calculate desirability based on the spots."""
+        return sum(value for value in self.spots.values() if value == 9)
+
+    def combine(self, other):
+        """Combine this agent with another agent to create a new agent."""
+        if self.gender == 'yX' and other.gender == 'xX':
+            new_gender = random.choice(['yX', 'xX'])
+            new_spots = self.combine_spots(other)
+            return Agent(new_gender, new_spots)
+        else:
+            raise ValueError("Invalid gender combination for reproduction.")
+
+    def combine_spots(self, other):
+        """Combine spots from both agents based on the specified rules."""
+        father_spots = random.sample(list(self.spots.items()), 5)
+        mother_spots = random.sample(list(other.spots.items()), 5)
+        
+        new_spots = {}
+        
+        # Combine spots with the rules applied
+        for (father_index, father_value), (mother_index, mother_value) in zip(father_spots, mother_spots):
+            # Increment spots based on rules
+            new_index = (father_index + 1) % SPOT_COUNT
+            new_value = (father_value + mother_value) // 2  # Average value for simplicity
+            new_spots[new_index] = new_value
+        
+        return new_spots
+
+# Create initial population
+def create_initial_population():
+    """Create an initial population of agents."""
+    agents = []
+    for _ in range(MALES):
+        agents.append(Agent('M'))
+    for _ in range(FEMALES):
+        agents.append(Agent('F'))
+    return agents
+
+# Simulate generations
+def simulate_generations(agents):
+    """Simulate the evolution of agents over a number of generations."""
+    for generation in range(GENERATIONS):
+        new_agents = []
+        for i in range(0, len(agents), 2):
+            if i + 1 < len(agents):
+                child = agents[i].combine(agents[i + 1])
+                new_agents.append(child)
+        agents.extend(new_agents)
+    return agents
+
+# Visualization
+def visualize_agents(agents):
+    """Visualize the agents and their desirability."""
+    desirability_scores = [agent.desirability for agent in agents]
+    plt.figure(figsize=(10, 6))
+    plt.bar(range(len(agents)), desirability_scores)
+    plt.title('Desirability of Agents')
+    plt.xlabel('Agent Index')
+    plt.ylabel('Desirability Score')
+    plt.xticks(range(len(agents)), [f'{agent.gender}' for agent in agents])
+    plt.show()
+
+# Main execution
+if __name__ == "__main__":
+    random.seed(42)  # For reproducibility
+    initial_agents = create_initial_population()
+    all_agents = simulate_generations(initial_agents)
+    visualize_agents(all_agents)
