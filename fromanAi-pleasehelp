@@ -1,0 +1,82 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+
+class GeneticObject:
+    def __init__(self, gender):
+        """
+        Initialize a GeneticObject with a specified gender.
+        
+        Parameters:
+        gender (str): 'male' or 'female'
+        """
+        if gender not in ['male', 'female']:
+            raise ValueError("Gender must be 'male' or 'female'")
+        
+        self.gender = gender
+        self.array = np.zeros((32, 32), dtype=int)
+        self.initialize_array()
+    
+    def initialize_array(self):
+        """
+        Initialize the 32x32 array based on the genetic rules.
+        """
+        # Randomly select 5 positions for X or Y based on gender
+        if self.gender == 'male':
+            positions = random.sample(range(32), 5)  # 5 X positions for males
+            for pos in positions:
+                self.array[:, pos] = self.generate_wave(pos, is_x=True)
+        else:  # female
+            positions = random.sample(range(32), 5)  # 5 Y positions for females
+            for pos in positions:
+                self.array[pos, :] = self.generate_wave(pos, is_x=False)
+
+    def generate_wave(self, pos, is_x):
+        """
+        Generate a wave pattern in the array.
+        
+        Parameters:
+        pos (int): The position to start the wave from.
+        is_x (bool): True if the wave is for X (vertical), False for Y (horizontal).
+        
+        Returns:
+        np.ndarray: The wave pattern as a 1D array.
+        """
+        wave = np.zeros(32, dtype=int)
+        wave[pos] = 0  # Starting point
+        
+        if is_x:
+            for i in range(1, 10):
+                if pos - i >= 0:
+                    wave[pos - i] = i
+                if pos + i < 32:
+                    wave[pos + i] = i
+        else:
+            for i in range(1, 10):
+                if pos - i >= 0:
+                    wave[pos - i] = i
+                if pos + i < 32:
+                    wave[pos + i] = i
+                    
+        return wave
+
+    def visualize(self):
+        """
+        Visualize the 32x32 array using matplotlib.
+        """
+        plt.imshow(self.array, cmap='viridis', interpolation='nearest')
+        plt.colorbar(label='Value')
+        plt.title(f'Visualization of {self.gender.capitalize()} Genetic Object')
+        plt.xlabel('X-axis')
+        plt.ylabel('Y-axis')
+        plt.show()
+
+# Example usage:
+if __name__ == "__main__":
+    # Create a male and a female genetic object
+    male_genetic_object = GeneticObject('male')
+    female_genetic_object = GeneticObject('female')
+
+    # Visualize the arrays
+    male_genetic_object.visualize()
+    female_genetic_object.visualize()
