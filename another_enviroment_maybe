@@ -1,0 +1,100 @@
+import numpy as np
+import random
+import matplotlib.pyplot as plt
+
+class Individual:
+    def __init__(self, gender):
+        self.gender = gender
+        self.spots = self.generate_spots()
+        self.desirability = self.calculate_desirability()
+
+    def generate_spots(self):
+        """Generate a random array of 10 spots with values between 0 and 9."""
+        return [random.randint(0, 9) for _ in range(10)]
+
+    def calculate_desirability(self):
+        """Calculate desirability based on the sum of spots and their proximity to 9."""
+        return sum(9 - spot for spot in self.spots if spot != 0)
+
+    def combine(self, other):
+        """Combine this individual with another to produce a new individual."""
+        father_spots = random.sample(self.spots, 5)
+        mother_spots = random.sample(other.spots, 5)
+        
+        # Create a new individual's spots based on the combination
+        new_spots = []
+        for i in range(5):
+            new_spots.append(father_spots[i])  # X from father
+            new_spots.append(mother_spots[i])  # x from mother
+
+        new_individual = Individual(gender=random.choice(['Male', 'Female']))
+        new_individual.spots = new_spots
+        new_individual.desirability = new_individual.calculate_desirability()
+        return new_individual
+
+
+def generate_initial_population(num_males, num_females):
+    """Generate an initial population of individuals."""
+    males = [Individual('Male') for _ in range(num_males)]
+    females = [Individual('Female') for _ in range(num_females)]
+    return males, females
+
+
+def run_simulation(generations, num_males, num_females):
+    """Run the simulation for a given number of generations."""
+    males, females = generate_initial_population(num_males, num_females)
+
+    for generation in range(generations):
+        new_males = []
+        new_females = []
+
+        # Combine males and females to create new individuals
+        for male in males:
+            female = random.choice(females)
+            child = male.combine(female)
+
+            if child.gender == 'Male':
+                new_males.append(child)
+            else:
+                new_females.append(child)
+
+        # Update the population for the next generation
+        males = new_males
+        females = new_females
+
+        # Print the average desirability of the current generation
+        average_desirability = np.mean([ind.desirability for ind in males + females])
+        print(f"Generation {generation + 1}: Average Desirability = {average_desirability:.2f}")
+
+    return males, females
+
+
+def visualize_population(males, females):
+    """Visualize the final population."""
+    plt.figure(figsize=(12, 6))
+
+    # Plot males
+    plt.subplot(1, 2, 1)
+    plt.title('Males')
+    plt.bar(range(len(males)), [ind.desirability for ind in males], color='blue')
+    plt.xlabel('Individuals')
+    plt.ylabel('Desirability')
+
+    # Plot females
+    plt.subplot(1, 2, 2)
+    plt.title('Females')
+    plt.bar(range(len(females)), [ind.desirability for ind in females], color='pink')
+    plt.xlabel('Individuals')
+    plt.ylabel('Desirability')
+
+    plt.tight_layout()
+    plt.show()
+
+
+if __name__ == "__main__":
+    NUM_GENERATIONS = 25
+    NUM_MALES = 4
+    NUM_FEMALES = 4
+
+    males, females = run_simulation(NUM_GENERATIONS, NUM_MALES, NUM_FEMALES)
+    visualize_population(males, females)
